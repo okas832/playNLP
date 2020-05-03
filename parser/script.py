@@ -19,7 +19,7 @@ class SCRIPT():
     #   return CHARACTER which has same character name if exist
     #   return None if not exist
     def is_character_name_already_shown(self, character_name):
-        fl = filter(lambda x: character_name == x.name, self.character)
+        fl = list(filter(lambda x: character_name == x.name, self.character))
         if len(fl) == 0:
             return None
         return fl[0]
@@ -115,7 +115,7 @@ def parse_playscript(fp):
     before_type = None
     while True:
         line = fp.readline()
-        if line == "":  # EOF
+        if line == "" or line.strip() == "THE END":  # end script or EOF
             break
         # seperate in lazy way
         elif line.startswith("                                              "):
@@ -133,6 +133,9 @@ def parse_playscript(fp):
                             before_type if line.find("(CONT'D)") != -1 else SING,
                             line.find("(CONT'D)") != -1,
                             line.split(" (", 1)[0])
+                if not script.is_character_name_already_shown(line.split(" (", 1)[0]):
+                    character = CHARACTER(line.split(" (", 1)[0], "")
+                    script.append_character(character)
                 am_flag = ON_SING
             elif am_flag == ON_SING:  # sing - on lyrics
                 conv.text += ("" if len(conv.text) == 0 else " ") + line
@@ -147,6 +150,9 @@ def parse_playscript(fp):
                             before_type if line.find("(CONT'D)") != -1 else CONV,
                             line.find("(CONT'D)") != -1,
                             line.split(" (", 1)[0])
+                if not script.is_character_name_already_shown(line.split(" (", 1)[0]):
+                    character = CHARACTER(line.split(" (", 1)[0], "")
+                    script.append_character(character)
                 am_flag = ON_CONV
 
         elif line.startswith("   "):  # narrator or time & place 
@@ -169,10 +175,10 @@ def parse_playscript(fp):
                     script.append_content(conv)
                     if am_flag != ON_NARR:
                         before_type = conv.type
-                conv = CONV("",
+                conv = CONV(line,
                             NARR,
-                            line.find("(CONT'D)") != -1,
-                            line.split(" (", 1)[0])
+                            None,
+                            None)
                 am_flag = ON_NARR
         else:  # title or etc - ignore
             continue
@@ -180,4 +186,4 @@ def parse_playscript(fp):
 
 if __name__ == "__main__":
     f = open("../test/FROZEN.txt")
-    parse_playscript(f)
+    script = parse_playscript(f)
