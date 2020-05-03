@@ -91,10 +91,9 @@ def parse_playscript(fp):
     # *in lazy way*
     while True:
         line = fp.readline().strip()
-        if line.startswith("   OPEN ON: "):
+        if line.startswith("OPEN ON:"):
             break
-
-    script.append_content(DESC(line.split("OPEN ON: ")[1], None))
+    script.append_content(TIMEPLACE(line.split("OPEN ON: ")[1], None))
 
     # automata flag
     # ON_NONE : expecting everything
@@ -104,24 +103,23 @@ def parse_playscript(fp):
     # EX_SING : expecting sing
     am_flag = ON_NONE
 
-    conv = CONV()
     before_type = None
     while True:
         line = fp.readline()
         if line == "":  # EOF
             break
+        elif line.startswith("                                              "):
+            continue # page number, script signs
         elif line.startswith("                  "):  # conv or sing or sing title
-            # TODO : parse conv, sing
-            #        ingore page number
+            # TODO : parse conv, sinr
+            1
         elif line.startswith("   "):  # narrator or time & place 
             # TODO : parse narrator, time & place
             #        think how to handle conv in page 18
             #        time & place, narrator mixed text?
+            1
         else:  # title or etc - ignore
             continue
-
-        print(am_flag, line)
-        input()
 
 if __name__ == "__main__":
     f = open("../test/FROZEN.txt")
