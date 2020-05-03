@@ -156,7 +156,10 @@ def parse_playscript(fp):
                     script.append_content(conv)
                     if am_flag != ON_NARR:
                         before_type = conv.type
-                place, time = line.split(". ")[1].split(" -- ")
+                try:
+                    place, time = line.split(". ")[1].split(" -- ")
+                except:
+                    place, time = line.split(". ")[1].split(" - ")
                 script.append_content(TIMEPLACE(time, place))
                 am_flag = ON_NONE
             elif am_flag == ON_NARR:
@@ -173,6 +176,7 @@ def parse_playscript(fp):
                 am_flag = ON_NARR
         else:  # title or etc - ignore
             continue
+    return script
 
 if __name__ == "__main__":
     f = open("../test/FROZEN.txt")
