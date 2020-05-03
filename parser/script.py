@@ -28,7 +28,6 @@ class SCRIPT():
     #   add contents of script
     def append_content(self, cont):
         if not isinstance(cont, CONV)\
-       and not isinstance(cont, DESC)\
        and not isinstance(cont, TIMEPLACE):
             raise TypeError("content can only have CONV, DESC, TIMEPLACE, not %s"%(type(cont)))
         self.content.append(cont)
