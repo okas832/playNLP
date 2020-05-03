@@ -1,7 +1,7 @@
 # CONV type
 CONV = 0
 SING = 1
-DESC = 2
+NARR = 2
 # paring automate flag
 ON_NONE = 0
 ON_NARR = 1

@@ -1,5 +1,5 @@
 from character import CHARACTER
-from defs import CONV, SING, DESC
+from defs import CONV, SING, NARR
 from defs import ON_NONE, ON_NARR, ON_CONV, ON_SING, EX_SING
 
 # class SCRIPT
@@ -46,8 +46,10 @@ class SCRIPT():
 # type - int
 #   0 : conversation
 #   1 : sing
-#   2 : description
-#   use defs.CONV, defs.SING, defs.DESC instead of number
+#   2 : narrator
+#   use defs.CONV, defs.SING, defs.NARR instead of number
+# cont - bool
+#   is this continued?
 # speak - CHARACTER
 #   who is saying
 # listen - CHATACTER or None
@@ -63,6 +65,9 @@ class CONV():
         self.listen = None
         self.ref = []
 
+    def __repr__(self):
+        return "<conv {}>".format(self.type)
+
 # class TIMEPLACE
 #   data of scene heading
 #
@@ -74,6 +79,9 @@ class TIMEPLACE():
     def __init__(self, time, place):
         self.time = time
         self.place = place
+
+    def __repr__(self):
+        return "<timeplace>"
 
 # parse_playscript
 #   parse play script from file
@@ -93,7 +101,7 @@ def parse_playscript(fp):
         line = fp.readline().strip()
         if line.startswith("OPEN ON:"):
             break
-    script.append_content(TIMEPLACE(line.split("OPEN ON: ")[1], None))
+    script.append_content(TIMEPLACE("", line.split("OPEN ON: ")[1]))
 
     # automata flag
     # ON_NONE : expecting everything
@@ -103,21 +111,66 @@ def parse_playscript(fp):
     # EX_SING : expecting sing
     am_flag = ON_NONE
 
+    conv = None
     before_type = None
     while True:
         line = fp.readline()
         if line == "":  # EOF
             break
+        # seperate in lazy way
         elif line.startswith("                                              "):
             continue # page number, script signs
         elif line.startswith("                  "):  # conv or sing or sing title
-            # TODO : parse conv, sinr
-            1
+            line = line.strip()
+            if line.startswith("\""): # sing title
+                if am_flag != ON_NONE: # something parsed
+                    script.append_content(conv)
+                    if am_flag != ON_NARR:
+                        before_type = conv.type
+                am_flag = EX_SING
+            elif am_flag == EX_SING: # sing - on singer
+                conv = CONV("",
+                            before_type if line.find("(CONT'D)") != -1 else SING,
+                            line.find("(CONT'D)") != -1,
+                            line.split(" (", 1)[0])
+                am_flag = ON_SING
+            elif am_flag == ON_SING:  # sing - on lyrics
+                conv.text += ("" if len(conv.text) == 0 else " ") + line
+            elif am_flag == ON_CONV:
+                conv.text += ("" if len(conv.text) == 0 else " ") + line
+            else: # conv - on speaker
+                if am_flag != ON_NONE: # something parsed
+                    script.append_content(conv)
+                    if am_flag != ON_NARR:
+                        before_type = conv.type
+                conv = CONV("",
+                            before_type if line.find("(CONT'D)") != -1 else CONV,
+                            line.find("(CONT'D)") != -1,
+                            line.split(" (", 1)[0])
+                am_flag = ON_CONV
+
         elif line.startswith("   "):  # narrator or time & place 
-            # TODO : parse narrator, time & place
-            #        think how to handle conv in page 18
-            #        time & place, narrator mixed text?
-            1
+            line = line.strip()
+            if line.startswith("EXT. ") or line.startswith("INT. "):  # time
+                if am_flag != ON_NONE:  # something parsed
+                    script.append_content(conv)
+                    if am_flag != ON_NARR:
+                        before_type = conv.type
+                place, time = line.split(". ")[1].split(" -- ")
+                script.append_content(TIMEPLACE(time, place))
+                am_flag = ON_NONE
+            elif am_flag == ON_NARR:
+                conv.text += ("" if len(conv.text) == 0 else " ") + line
+            else:
+                if am_flag != ON_NONE: # something parsed
+                    script.append_content(conv)
+                    if am_flag != ON_NARR:
+                        before_type = conv.type
+                conv = CONV("",
+                            NARR,
+                            line.find("(CONT'D)") != -1,
+                            line.split(" (", 1)[0])
+                am_flag = ON_NARR
         else:  # title or etc - ignore
             continue
 
