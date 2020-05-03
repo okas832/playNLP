@@ -1,9 +1,10 @@
 from character import CHARACTER
-from defs import CONVERSATION, SING
-from defs import ON_NONE, ON_NARR, ON_CONV, ON_SING
+from defs import CONV, SING, DESC
+from defs import ON_NONE, ON_NARR, ON_CONV, ON_SING, EX_SING
 
 # class SCRIPT
 #   data of script
+#
 # content - list of CONV, DESC, TIMEPLACE
 #   parsed results
 # character - list of CHARACTER
@@ -40,11 +41,14 @@ class SCRIPT():
 
 # class CONV
 #   data of conversation
+#
 # text - str
 #   text data
 # type - int
 #   0 : conversation
 #   1 : sing
+#   2 : description
+#   use defs.CONV, defs.SING, defs.DESC instead of number
 # speak - CHARACTER
 #   who is saying
 # listen - CHATACTER or None
@@ -52,34 +56,29 @@ class SCRIPT():
 # ref - list of CHARACTER
 #   link of pronouns
 class CONV():
-    def __init__(self, text, type, speak):
+    def __init__(self, text, type, cont, speak):
         self.text = text
         self.type = type
+        self.cont = cont
         self.speak = speak
         self.listen = None
         self.ref = []
 
-# class DESC
-#   data of narrator
-# text - str
-#   text data
-class DESC():
-    def __init__(self, text):
-        self.text = text
-
 # class TIMEPLACE
 #   data of scene heading
+#
 # place - str
 #   place where scene begin
 # time - str
 #   time of scene, but not exact time(DAY, DAWN, NIGHT, ...)
 class TIMEPLACE():
-    def __init__(self, place, time):
-        self.place = place
+    def __init__(self, time, place):
         self.time = time
+        self.place = place
 
 # parse_playscript
 #   parse play script from file
+#
 # input
 #   fp - File Object
 #     file pointer to read
@@ -103,33 +102,28 @@ def parse_playscript(fp):
     # ON_NARR : on narrator
     # ON_CONV : on normal conversation
     # ON_SING : on sing
-    am_flag = 0
+    # EX_SING : expecting sing
+    am_flag = ON_NONE
 
     conv = CONV()
+    before_type = None
     while True:
         line = fp.readline()
         if line == "":  # EOF
             break
-        elif line == "\n":  # blank line
-            am_flag = ON_NONE
-        elif line.startswith("    "):  # conv or sing
-            #  TODO: handle conv or sing
-            #        ignore page number
-            pass
-        elif line.startswith("   "):  # narrator
-            #  TODO: handle narrator
-            pass
+        elif line.startswith("                  "):  # conv or sing or sing title
+            # TODO : parse conv, sing
+            #        ingore page number
+        elif line.startswith("   "):  # narrator or time & place 
+            # TODO : parse narrator, time & place
+            #        think how to handle conv in page 18
+            #        time & place, narrator mixed text?
         else:  # title or etc - ignore
             continue
 
+        print(am_flag, line)
+        input()
 
-
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    f = open("../test/FROZEN.txt")
+    parse_playscript(f)

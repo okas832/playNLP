@@ -15,7 +15,9 @@ class MBTI():
 
 # class CHARACTER
 #   data of character
+#
 # inheritance MBTI
+#
 # name - str
 #   character's name
 # sex - str
