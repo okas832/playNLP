@@ -132,9 +132,9 @@ def parse_playscript(fp):
                 conv = CONV("",
                             before_type if line.find("(CONT'D)") != -1 else SING,
                             line.find("(CONT'D)") != -1,
-                            line.split(" (", 1)[0])
-                if not script.is_character_name_already_shown(line.split(" (", 1)[0]):
-                    character = CHARACTER(line.split(" (", 1)[0], "")
+                            line.split("(", 1)[0])
+                if not script.is_character_name_already_shown(line.split("(", 1)[0]):
+                    character = CHARACTER(line.split("(", 1)[0], "")
                     script.append_character(character)
                 am_flag = ON_SING
             elif am_flag == ON_SING:  # sing - on lyrics
@@ -149,13 +149,13 @@ def parse_playscript(fp):
                 conv = CONV("",
                             before_type if line.find("(CONT'D)") != -1 else CONV,
                             line.find("(CONT'D)") != -1,
-                            line.split(" (", 1)[0])
-                if not script.is_character_name_already_shown(line.split(" (", 1)[0]):
-                    character = CHARACTER(line.split(" (", 1)[0], "")
+                            line.split("(", 1)[0])
+                if not script.is_character_name_already_shown(line.split("(", 1)[0]):
+                    character = CHARACTER(line.split("(", 1)[0], "")
                     script.append_character(character)
                 am_flag = ON_CONV
 
-        elif line.startswith("   "):  # narrator or time & place 
+        elif line.startswith("   "):  # narrator or time & place
             line = line.strip()
             if line.startswith("EXT. ") or line.startswith("INT. "):  # time
                 if am_flag != ON_NONE:  # something parsed
