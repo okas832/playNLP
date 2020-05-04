@@ -14,11 +14,11 @@ class SCRIPT():
         self.content = []
         self.character = []
 
-    # is_character_name_already_shown
+    # get_character_by_name
     #   check if the chacacter name already shown before
     #   return CHARACTER which has same character name if exist
     #   return None if not exist
-    def is_character_name_already_shown(self, character_name):
+    def get_character_by_name(self, character_name):
         fl = list(filter(lambda x: character_name == x.name, self.character))
         if len(fl) == 0:
             return None
@@ -48,7 +48,7 @@ class SCRIPT():
 #   1 : sing
 #   2 : narrator
 #   use defs.CONV, defs.SING, defs.NARR instead of number
-# cont - bool
+# cont - boolean
 #   is this continued?
 # speak - CHARACTER
 #   who is saying
@@ -131,16 +131,16 @@ def parse_playscript(fp):
                 am_flag = EX_SING
             elif am_flag == EX_SING: # sing - on singer
                 character_name = line.split("(", 1)[0].strip()
+                # TODO : How to handle "YOUNG" or "TEEN"?
+                #      : More information about speaker such as (9)
+                character = script.get_character_by_name(character_name)
+                if not character:
+                    character = CHARACTER(character_name, "")
+                    script.append_character(character)
                 conv = CONV("",
                             before_type if line.find("(CONT'D)") != -1 else SING,
                             line.find("(CONT'D)") != -1,
-                            character_name)
-
-                # TODO : How to handle "YOUNG" or "TEEN"?
-                #      : More information about speaker such as (9)
-                if not script.is_character_name_already_shown(character_name):
-                    character = CHARACTER(character_name, "")
-                    script.append_character(character)
+                            character)
                 am_flag = ON_SING
             elif am_flag == ON_SING:  # sing - on lyrics
                 conv.text += ("" if len(conv.text) == 0 else " ") + line
@@ -152,13 +152,14 @@ def parse_playscript(fp):
                     if am_flag != ON_NARR:
                         before_type = conv.type
                 character_name = line.split("(", 1)[0].strip()
+                character = script.get_character_by_name(character_name)
+                if not character:
+                    character = CHARACTER(character_name, "")
+                    script.append_character(character)
                 conv = CONV("",
                             before_type if line.find("(CONT'D)") != -1 else CONV,
                             line.find("(CONT'D)") != -1,
-                            character_name)
-                if not script.is_character_name_already_shown(character_name):
-                    character = CHARACTER(character_name, "")
-                    script.append_character(character)
+                            character)
                 am_flag = ON_CONV
 
         elif line.startswith("   "):  # narrator or time & place
