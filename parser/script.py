@@ -1,6 +1,6 @@
 from character import CHARACTER
 from defs import CONV, SING, NARR
-from defs import ON_NONE, ON_NARR, ON_CONV, ON_SING, EX_SING
+from defs import ON_NONE, ON_NARR, ON_CONV, ON_SING, EX_SING, ON_TWOC
 
 # class SCRIPT
 #   data of script
@@ -31,6 +31,7 @@ class SCRIPT():
        and not isinstance(cont, TIMEPLACE):
             raise TypeError("content can only have CONV, DESC, TIMEPLACE, not %s"%(type(cont)))
         self.content.append(cont)
+
     # append_character
     #   add new character
     def append_character(self, character):
@@ -109,25 +110,36 @@ def parse_playscript(fp):
     # ON_CONV : on normal conversation
     # ON_SING : on sing
     # EX_SING : expecting sing
+    # ON_TWOC : on two conversation
     am_flag = ON_NONE
 
     conv = None
+    conv2 = None
     before_type = None
     while True:
         line = fp.readline()
         if line == "" or line.strip() == "THE END":  # end script or EOF
             break
+        elif line == "\n":
+            if am_flag == ON_TWOC:
+                script.append_content(conv)
+                script.append_content(conv2)
+                before_type = conv.type
+                am_flag = ON_NONE
         # seperate in lazy way
         elif line.startswith("                                              "):
             continue # page number, script signs
         elif line.startswith("                  "):  # conv or sing or sing title
-            # TODO : handle two line voice
+            sline = line[:]
             line = line.strip()
             if line.startswith("\""): # sing title
                 if am_flag != ON_NONE: # something parsed
                     script.append_content(conv)
+                    if am_flag == ON_TWOC:
+                        script.append_content(conv2)
                     if am_flag != ON_NARR:
                         before_type = conv.type
+
                 am_flag = EX_SING
             elif am_flag == EX_SING: # sing - on singer
                 character_name = line.split("(", 1)[0].strip()
@@ -144,13 +156,16 @@ def parse_playscript(fp):
                 am_flag = ON_SING
             elif am_flag == ON_SING:  # sing - on lyrics
                 conv.text += ("" if len(conv.text) == 0 else " ") + line
-            elif am_flag == ON_CONV:
+            elif am_flag == ON_CONV and not sline.startswith("                            "):
                 conv.text += ("" if len(conv.text) == 0 else " ") + line
             else: # conv - on speaker
                 if am_flag != ON_NONE: # something parsed
                     script.append_content(conv)
+                    if am_flag == ON_TWOC:
+                        script.append_content(conv2)
                     if am_flag != ON_NARR:
                         before_type = conv.type
+
                 character_name = line.split("(", 1)[0].strip()
                 character = script.get_character_by_name(character_name)
                 if not character:
@@ -163,7 +178,36 @@ def parse_playscript(fp):
                 am_flag = ON_CONV
 
         elif line.startswith("   "):  # narrator or time & place
-            # TODO : handle two line voice
+            if line.startswith("    "):
+                if am_flag != ON_NONE:
+                    script.append_content(conv)
+                    if am_flag == ON_TWOC:
+                        script.append_content(conv2)
+                    if am_flag != ON_NARR:
+                        before_type = conv.type
+
+                line = line.strip()
+                n1, n2 = line.split("                              ")
+                n1 = n1.split("(", 1)[0].strip()
+                n2 = n2.split("(", 1)[0].strip()
+                character1 = script.get_character_by_name(n1)
+                character2 = script.get_character_by_name(n2)
+                if not character1:
+                    character1 = CHARACTER(character_name, "")
+                    script.append_character(character1)
+                if not character2:
+                    character2 = CHARACTER(character_name, "")
+                    script.append_character(character2)
+                conv = CONV("",
+                            before_type if n1.find("(CONT'D)") != -1 else CONV,
+                            n1.find("(CONT'D)") != -1,
+                            character1)
+                conv2 = CONV("",
+                             before_type if n2.find("(CONT'D)") != -1 else CONV,
+                             n2.find("(CONT'D)") != -1,
+                             character2)
+                am_flag = ON_TWOC
+                continue
             line = line.strip()
             # TODO : Non standard scene heading.
             #        Starts with -INT. or -EXT. but has some narrator text in
@@ -171,21 +215,36 @@ def parse_playscript(fp):
             if line.startswith("EXT. ") or line.startswith("INT. "):  # time
                 if am_flag != ON_NONE:  # something parsed
                     script.append_content(conv)
+                    if am_flag == ON_TWOC:
+                        script.append_content(conv2)
                     if am_flag != ON_NARR:
                         before_type = conv.type
+
                 try:
                     place, time = line.split(". ")[1].split(" -- ")
                 except:
                     place, time = line.split(". ")[1].split(" - ")
                 script.append_content(TIMEPLACE(time, place))
                 am_flag = ON_NONE
+            elif am_flag == ON_TWOC:
+                txt = line.split("          ")
+                if len(txt) == 1:  # only left character
+                    conv.text += ("" if len(conv.text) == 0 else " ") + txt[0].strip()
+                elif len(txt[0].strip()) == 0:  # only right character
+                    conv2.text += ("" if len(conv2.text) == 0 else " ") + txt[-1].strip()
+                else:
+                    conv.text += ("" if len(conv.text) == 0 else " ") + txt[0].strip()
+                    conv2.text += ("" if len(conv2.text) == 0 else " ") + txt[-1].strip()
             elif am_flag == ON_NARR:
                 conv.text += ("" if len(conv.text) == 0 else " ") + line
             else:
-                if am_flag != ON_NONE: # something parsed
+                if am_flag != ON_NONE:  # something parsed
                     script.append_content(conv)
+                    if am_flag == ON_TWOC:
+                        script.append_content(conv2)
                     if am_flag != ON_NARR:
                         before_type = conv.type
+
                 conv = CONV(line,
                             NARR,
                             None,
@@ -198,3 +257,10 @@ def parse_playscript(fp):
 if __name__ == "__main__":
     f = open("../test/FROZEN.txt")
     script = parse_playscript(f)
+    for cont in script.content:
+        if isinstance(cont, TIMEPLACE):
+            print("TIME : {}, PLACE : {}".format(cont.time, cont.place))
+        elif cont.type == NARR:
+            print("NARR : {}".format(cont.text))
+        else:
+            print("{} : {}".format(cont.speak.name, cont.text))

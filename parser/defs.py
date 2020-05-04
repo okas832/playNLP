@@ -8,4 +8,4 @@ ON_NARR = 1
 ON_CONV = 2
 ON_SING = 3
 EX_SING = 4
-
+ON_TWOC = 5
