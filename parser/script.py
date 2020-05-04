@@ -121,6 +121,7 @@ def parse_playscript(fp):
         elif line.startswith("                                              "):
             continue # page number, script signs
         elif line.startswith("                  "):  # conv or sing or sing title
+            # TODO : handle two line voice
             line = line.strip()
             if line.startswith("\""): # sing title
                 if am_flag != ON_NONE: # something parsed
@@ -129,12 +130,16 @@ def parse_playscript(fp):
                         before_type = conv.type
                 am_flag = EX_SING
             elif am_flag == EX_SING: # sing - on singer
+                character_name = line.split("(", 1)[0].strip()
                 conv = CONV("",
                             before_type if line.find("(CONT'D)") != -1 else SING,
                             line.find("(CONT'D)") != -1,
-                            line.split("(", 1)[0])
-                if not script.is_character_name_already_shown(line.split("(", 1)[0]):
-                    character = CHARACTER(line.split("(", 1)[0], "")
+                            character_name)
+
+                # TODO : How to handle "YOUNG" or "TEEN"?
+                #      : More information about speaker such as (9)
+                if not script.is_character_name_already_shown(character_name):
+                    character = CHARACTER(character_name, "")
                     script.append_character(character)
                 am_flag = ON_SING
             elif am_flag == ON_SING:  # sing - on lyrics
@@ -146,17 +151,22 @@ def parse_playscript(fp):
                     script.append_content(conv)
                     if am_flag != ON_NARR:
                         before_type = conv.type
+                character_name = line.split("(", 1)[0].strip()
                 conv = CONV("",
                             before_type if line.find("(CONT'D)") != -1 else CONV,
                             line.find("(CONT'D)") != -1,
-                            line.split("(", 1)[0])
-                if not script.is_character_name_already_shown(line.split("(", 1)[0]):
-                    character = CHARACTER(line.split("(", 1)[0], "")
+                            character_name)
+                if not script.is_character_name_already_shown(character_name):
+                    character = CHARACTER(character_name, "")
                     script.append_character(character)
                 am_flag = ON_CONV
 
         elif line.startswith("   "):  # narrator or time & place
+            # TODO : handle two line voice
             line = line.strip()
+            # TODO : Non standard scene heading.
+            #        Starts with -INT. or -EXT. but has some narrator text in
+            #        one line
             if line.startswith("EXT. ") or line.startswith("INT. "):  # time
                 if am_flag != ON_NONE:  # something parsed
                     script.append_content(conv)
