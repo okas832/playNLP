@@ -119,6 +119,10 @@ def parse_playscript(fp):
     while True:
         line = fp.readline()
         if line == "" or line.strip() == "THE END":  # end script or EOF
+            if am_flag != ON_NONE:
+                script.append_content(conv)
+                if am_flag == ON_TWOC:
+                    script.append_content(conv2)
             break
         elif line == "\n":
             if am_flag == ON_TWOC:
