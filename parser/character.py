@@ -1,4 +1,6 @@
 from defs import *
+from script import *
+
 from tqdm import tqdm
 import re
 import xml.etree.ElementTree as ET
@@ -6,21 +8,31 @@ from nltk.tokenize import word_tokenize
 from nltk.lm import Vocabulary
 from nltk.classify.naivebayes import NaiveBayesClassifier as NB
 
-# class MBTI
-#   MBTI data
-class MBTI():
+
+# class PERSONALITY
+#   Big-5 Personality data
+class PERSONALITY:
     def __init__(self):
-        self.M = 0
-        self.B = 0
-        self.T = 0
-        self.I = 0
+        self.extroverted = 0
+        self.stable = 0
+        self.agreeable = 0
+        self.conscientious = 0
+        self.openness = 0
 
-    # get_MBTI
-    # return MBTI value in tuple format
-    def get_MBTI(self):
-        return (self.M, self.B, self.T, self.I)
+    # get_PERSONALITY
+    # return Big 5 Personality value in tuple format
+    def get_PERSONALITY(self):
+        return self.extroverted, self.stable, self.agreeable, self.conscientious, self.openness
 
-class CHARACTERISTIC_TRAINER():
+    def set_PERSONALITY(self, extroverted, stable, agreeable, conscientious, openness):
+        self.extroverted = extroverted
+        self.stable = stable
+        self.agreeable = agreeable
+        self.conscientious = conscientious
+        self.openness = openness
+
+
+class CHARACTERISTIC_TRAINER:
     def __init__(self):
         self.train = {}
         self.test = {}
@@ -29,15 +41,15 @@ class CHARACTERISTIC_TRAINER():
         self.prepare_dataset(mode='train')
         self.prepare_dataset(mode="test")
         self.vocab_words = {w: 0 for w in self.vocab.counts.keys() if w in self.vocab}
-        self.vocab_words['UNK'] = 0 # initially add UNK feature section
+        self.vocab_words['UNK'] = 0  # initially add UNK feature section
         # vocab size is currently 20124
-        """uncomment this and erase the below line for full training. Currently training only gender for speed issue
+        # uncomment this and erase the below line for full training. Currently training only gender for speed issue
         for mode in ['gender', 'age_group', 'extroverted', 'stable', 'agreeable', 'conscientious', 'openness']:
             self.run_train(mode)
-        """
-        self.run_train('gender')
 
-    def prepare_dataset(self, mode="train"): # mode = ["train", "test"]
+        # self.run_train('gender')
+
+    def prepare_dataset(self, mode="train"):  # mode = ["train", "test"]
         """
         Each line of the truth files encodes the following information:
         userid:::gender:::age_group:::extroverted:::stable:::agreeable:::conscientious:::openness
@@ -52,7 +64,7 @@ class CHARACTERISTIC_TRAINER():
         else:
             raise Exception("Directory name should be one of 'train' or 'test'")
 
-        with open(dir_path+"truth.txt", "r") as f:
+        with open(dir_path + "truth.txt", "r") as f:
             truths = f.read().split('\n')[:-1]
         for truth in truths:
             userid, gender, age_group, extroverted, stable, agreeable, conscientious, openness = truth.split(":::")
@@ -64,16 +76,17 @@ class CHARACTERISTIC_TRAINER():
                              "openness": openness, "text": words}
 
         print(f"prepare_dataset: {mode} DONE")
-    def preprocess_text(self, text, mode='train'): # clean up and tokenize text
+
+    def preprocess_text(self, text, mode='train'):  # clean up and tokenize text
         processed_text = []
-        #remove url
-        #change @username to you
+        # remove url
+        # change @username to you
         if 'http' in text:
             text = text[:text.index('http')]
         text = re.sub(r"[^A-Z a-z?!-]+", '', text)
         words = [w.lower() for w in word_tokenize(text)]
         if mode == 'train':
-            self.vocab.update(words) # add corresponding word to vocab
+            self.vocab.update(words)  # add corresponding word to vocab
         return words
 
     def get_feature_dict(self, words):
@@ -91,33 +104,56 @@ class CHARACTERISTIC_TRAINER():
         train_input = []
         print(f"making train_input: {mode}")
         for infos in tqdm(self.train.values()):
-            for info in infos['text']: # process same label for 100 texts
+            for info in infos['text']:  # process same label for 100 texts
                 train_input.append((self.get_feature_dict(info), infos[mode]))
         print(f"running trainer... {mode}")
         self.classifier[mode] = NB.train(train_input)
         print("running trainer done")
 
-    def predict(self, text, mode='gender'): # mode has to be one of classifier.keys()
+    def predict(self, text, mode='gender'):  # mode has to be one of classifier.keys()
         preprocessed_words = self.preprocess_text(text, mode='predict')
         feature_dict = self.get_feature_dict(preprocessed_words)
         classified = self.classifier[mode].classify(feature_dict)
-        print(f"Predicted output: {classified}")
+        # print(f"Predicted output: {classified}")
+        return classified
+
 
 # class CHARACTER
 #   data of character
 #
-# inheritance MBTI
+# inheritance PERSONALITY
 #
 # name - str
 #   character's name
 # sex - str
 #   character's gender
-class CHARACTER(MBTI):
+class CHARACTER(PERSONALITY):
     def __init__(self, name, sex):
         super().__init__()
         self.name = name
         self.sex = sex
-if __name__ == "__main__":
+
+
+def extract_personality(script):
     trainer = CHARACTERISTIC_TRAINER()
-    trainer.predict('I am so hungry !', mode='gender')
+
+    for character in script.character:
+        text_character = [content.text for content in script.content if isinstance(content, CONV) and
+                          content.speak == character]
+        len_text = len(text_character)
+        personality = character.get_PERSONALITY()
+        for text in text_character:
+            for i, mode in enumerate(['extroverted', 'stable', 'agreeable', 'conscientious', 'openness']):
+                personality[i] += trainer.predict(text, mode=mode) / len_text
+        character.set_PERSONALITY(*personality)
+
+
+if __name__ == "__main__":
+    # trainer = CHARACTERISTIC_TRAINER()
+    # trainer.predict('I am so hungry !', mode='gender')
+    with open("./data/FROZEN.txt", "r") as f:
+        script = parse_playscript(f)
+    extract_personality(script)
+    chr = script.character[1]
+    print(f"Personality of {chr.name} is: {chr.extroverted}/{chr.stable}/{chr.agreeable}/{chr.conscientious}/{chr.openness}")
 
