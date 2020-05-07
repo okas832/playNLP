@@ -259,7 +259,7 @@ def parse_playscript(fp):
     return script
 
 if __name__ == "__main__":
-    f = open("../test/FROZEN.txt")
+    f = open("./data/FROZEN.txt")
     script = parse_playscript(f)
     for cont in script.content:
         if isinstance(cont, TIMEPLACE):
