@@ -1,6 +1,6 @@
-from character import CHARACTER
-from defs import CONV, SING, NARR
-from defs import ON_NONE, ON_NARR, ON_CONV, ON_SING, EX_SING, ON_TWOC
+from character import *
+from defs import *
+from defs import *
 
 
 # class SCRIPT
@@ -62,6 +62,7 @@ class SCRIPT():
 class CONV():
     def __init__(self, text, type, cont, speak):
         self.text = text
+        self.modified_text = text
         self.type = type
         self.cont = cont
         self.speak = speak
@@ -273,3 +274,5 @@ if __name__ == "__main__":
             print("NARR : {}".format(cont.text))
         else:
             print("{} : {}".format(cont.speak.name, cont.text))
+
+        
