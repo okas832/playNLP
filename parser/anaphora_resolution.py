@@ -75,11 +75,6 @@ def find_Antecedent(text, tagged_text, previous_convs):
     
     return modified_text
 
-def find_listeners(cont, previous_convs):
-    output=[]
-    print(previous_convs)
-    return output
-
 def find_listeners_easy():
     moving_index=0
     for t_index in range(-1, timei):
@@ -128,7 +123,7 @@ def find_listeners_hard_with_using_weights():
             listeners=set()
             print(index_number)
             for j in range(i-(int)(weight_for_searching_speaker/2), i+(int)(weight_for_searching_speaker/2)):
-                if(j<0):
+                if(j<0 or j>= len_of_script_contents):
                     continue
                 cont_diff=script.content[j]
                 if(isinstance(cont_diff, TIMEPLACE)):
