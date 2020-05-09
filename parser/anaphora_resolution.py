@@ -116,7 +116,7 @@ def find_listeners_easy():
 
 def find_listeners_hard_with_using_weights():
     index_number=-1
-    weight=10
+    weight_for_searching_speaker=10
     weight_for_comparing_nearest=1
     for i in range(0, len_of_script_contents):
         cont=script.content[i]
@@ -127,7 +127,7 @@ def find_listeners_hard_with_using_weights():
         else:
             listeners=set()
             print(index_number)
-            for j in range(i-(int)(weight/2), i+(int)(weight/2)):
+            for j in range(i-(int)(weight_for_searching_speaker/2), i+(int)(weight_for_searching_speaker/2)):
                 if(j<0):
                     continue
                 cont_diff=script.content[j]
