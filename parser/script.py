@@ -66,8 +66,9 @@ class CONV():
         self.type = type
         self.cont = cont
         self.speak = speak
-        self.listen = None
-        self.ref = []
+        self.time_index=-1
+        self.listen = set()
+        self.ref = set()
 
     def __repr__(self):
         return "<conv {}>".format(self.type)
@@ -185,7 +186,6 @@ def parse_playscript(fp):
                             line.find("(CONT'D)") != -1,
                             character)
                 am_flag = ON_CONV
-
         elif line.startswith("   "):  # narrator or time & place
             if line.startswith("    "):
                 if am_flag != ON_NONE:
