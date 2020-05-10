@@ -3,6 +3,7 @@ from script import *
 from nltk.tag import pos_tag
 from nltk import word_tokenize
 from nltk.tokenize.treebank import TreebankWordDetokenizer
+from forevaluation import *
 
 pos_noun = {"NN", "NNS", "NNP", "NNPS"}
 pos_pronoun = "PRP"
@@ -109,7 +110,15 @@ def find_listeners_easy():
                     print(person.name)
                 print("-----------")
 
+
+index_of_listener_list=0
+num_of_total_listeners=0
+num_of_correct_listeners=0
+
 def find_listeners_hard_with_using_weights():
+    global num_of_total_listeners
+    global num_of_correct_listeners
+    global index_of_listener_list
     index_number=-1
     weight_for_searching_speaker=10
     weight_for_comparing_nearest=1
@@ -121,7 +130,7 @@ def find_listeners_hard_with_using_weights():
             continue
         else:
             listeners=set()
-            print(index_number)
+            #print(index_number)
             for j in range(i-(int)(weight_for_searching_speaker/2), i+(int)(weight_for_searching_speaker/2)):
                 if(j<0 or j>= len_of_script_contents):
                     continue
@@ -135,20 +144,38 @@ def find_listeners_hard_with_using_weights():
                 elif(cont_diff.type==2):
                     continue
                 if(cont_diff.speak!=cont.speak):
+                    if(len(cont_diff.speak.name)>6 and cont_diff.speak.name[:6]=="YOUNG "):
+                        cont_diff.speak.name=cont_diff.speak.name[6:]
                     listeners.add(cont_diff.speak)
                 if(abs(i-j)<=weight_for_comparing_nearest):
                     listeners=listeners|cont_diff.listen
                     listeners.discard(cont.speak)
             cont.listen=listeners
-            for lstn in cont.listen:
-                print(lstn.name)
-            print("--------------")
+            if(index_of_listener_list<len(listeners_list)):
+                num_of_total_listeners+=len(listeners_list[index_of_listener_list])
+                if(len(cont.listen)==0):
+                    num_of_total_listeners+=1
+                    if(listeners_list[index_of_listener_list][0]==None):
+                        num_of_correct_listeners+=1   
+                else:
+                    for lstn in cont.listen:
+                        #print(lstn.name)
+                        if(lstn.name in listeners_list[index_of_listener_list]):
+                            num_of_correct_listeners+=1             
+                #print(listeners_list[index_of_listener_list])
+                #print("---------------------------")
+                index_of_listener_list+=1
+
+            
 
 if __name__ == "__main__":
     f = open("./data/FROZEN.txt")
     script = parse_playscript(f)
     previous_conv_type = -1
     previous_type_conv = { CONV : [], SING : [], NARR : []}
+    
+    num_of_total_modified = 0
+    num_of_correctly_modified = 0
     for cont in script.content:
         changed = False
         
@@ -177,13 +204,18 @@ if __name__ == "__main__":
                 modified_text = find_Antecedent(tokenized_text, tagged_text, previous_type_conv[cont.type])
                 changed = True
                 break
-        
         cont.modified_text = TreebankWordDetokenizer().detokenize(modified_text).strip()
         if changed:
+            if(num_of_total_modified<16):
+                #print(cont.modified_text)
+                #print(modified_texts_list[num_of_total_modified][0])
+                #print()
+                if(cont.modified_text==modified_texts_list[num_of_total_modified][0]):
+                    num_of_correctly_modified+=1
+                num_of_total_modified+=1
             #print(f"cont.text : {cont.text} {len(cont.text)}")
             #print(f"cont.modified_text : {cont.modified_text} {len(cont.modified_text)}")
             #print()
-            continue
         if previous_conv_type != cont.type:
             if previous_conv_type != -1:
                 previous_type_conv[previous_conv_type] = []
@@ -193,7 +225,11 @@ if __name__ == "__main__":
 
         
         previous_conv_type = cont.type
-        
+
+    #evaluation
+    print("Modified text correctness:"+str(num_of_correctly_modified)+"/"+str(num_of_total_modified))
+    
+    #Finding listeners by sdh
     len_of_script_contents=len(script.content)
     timei=-1
     for index in range(0,len_of_script_contents):
@@ -204,6 +240,9 @@ if __name__ == "__main__":
             cont.time_index=timei
     
     find_listeners_hard_with_using_weights()
+
+    #evaluation
+    print("Listeners match correctness:"+str(num_of_correct_listeners)+"/"+str(num_of_total_listeners))
             
         # raw : We're underwater looking up at it. A saw cuts through, heading right for us.
         # tokenized_text : ['We', "'re", 'underwater', 'looking', 'up']

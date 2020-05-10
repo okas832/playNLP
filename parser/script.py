@@ -89,6 +89,13 @@ class TIMEPLACE():
     def __repr__(self):
         return "<timeplace>"
 
+def extract_name_only(input_name):
+    if(len(input_name)>6):
+        if(input_name[:6]=="YOUNG " or input_name[:6]=="GRAND "):
+            return input_name[6:]
+    elif(len(input_name)>5 and input_name[:5]=="TEEN "):
+        return input_name[5:]
+    return input_name
 
 # parse_playscript
 #   parse play script from file
@@ -152,7 +159,7 @@ def parse_playscript(fp):
 
                 am_flag = EX_SING
             elif am_flag == EX_SING:  # sing - on singer
-                character_name = line.split("(", 1)[0].strip()
+                character_name = extract_name_only(line.split("(", 1)[0].strip())
                 # TODO : How to handle "YOUNG" or "TEEN"?
                 #      : More information about speaker such as (9)
                 character = script.get_character_by_name(character_name)
@@ -176,7 +183,7 @@ def parse_playscript(fp):
                     if am_flag != ON_NARR:
                         before_type = conv.type
 
-                character_name = line.split("(", 1)[0].strip()
+                character_name = extract_name_only(line.split("(", 1)[0].strip())
                 character = script.get_character_by_name(character_name)
                 if not character:
                     character = CHARACTER(character_name, "")
