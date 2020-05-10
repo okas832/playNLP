@@ -24,7 +24,7 @@ class PERSONALITY:
     # get_PERSONALITY
     # return Big 5 Personality value in tuple format
     def get_PERSONALITY(self):
-        return self.extroverted, self.stable, self.agreeable, self.conscientious, self.openness
+        return [self.extroverted, self.stable, self.agreeable, self.conscientious, self.openness]
 
     def set_PERSONALITY(self, extroverted, stable, agreeable, conscientious, openness):
         self.extroverted = extroverted
@@ -137,6 +137,7 @@ class CHARACTER(PERSONALITY):
         super().__init__()
         self.name = name
         self.sex = sex
+        self.age_group = None
 
 
 def extract_personality(script, pretrained=None):
@@ -150,10 +151,16 @@ def extract_personality(script, pretrained=None):
         text_character = [content.text for content in script.content if isinstance(content, CONV) and
                           content.speak == character]
         len_text = len(text_character)
-        personality = list(character.get_PERSONALITY())
+        personality = character.get_PERSONALITY()
+        gender = []
+        age_group = []
         for text in text_character:
+            gender.append(trainer.predict(text, mode='gender'))
+            age_group.append(trainer.predict(text, mode='age_group'))
             for i, mode in enumerate(['extroverted', 'stable', 'agreeable', 'conscientious', 'openness']):
                 personality[i] += trainer.predict(text, mode=mode) / len_text
+        character.gender = max(set(gender), key=gender.count)
+        character.age_group = max(set(age_group), key=age_group.count)
         character.set_PERSONALITY(*personality)
 
 
@@ -162,7 +169,9 @@ if __name__ == "__main__":
     # trainer.predict('I am so hungry !', mode='gender')
     with open("./data/FROZEN.txt", "r") as f:
         script = parse_playscript(f)
-    extract_personality(script, 'characteristic_trainer.pickle')
-    chr = script.character[1]
-    print(f"Personality of {chr.name} is: {chr.extroverted}/{chr.stable}/{chr.agreeable}/{chr.conscientious}/{chr.openness}")
+    extract_personality(script, './characteristic_trainer.pickle')
+    for chr in script.character:
+        print(f'{chr.name}: {chr.gender}/{chr.age_group}/{chr.get_PERSONALITY()}')
+    with open('script_frozen.pickle', 'wb') as f:
+        pickle.dump(script, f)
 
