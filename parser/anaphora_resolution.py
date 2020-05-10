@@ -234,7 +234,7 @@ if __name__ == "__main__":
         cont.modified_text = TreebankWordDetokenizer().detokenize(modified_text).strip()
         cont.modified_text= detokenize(modified_text)
         if changed:
-            if(num_of_total_modified<20):
+            if(num_of_total_modified<len(modified_texts_list)):
                 #print(cont.modified_text)
                 #print(modified_texts_list[num_of_total_modified][0])
                 #print()
