@@ -1,6 +1,7 @@
-from character import CHARACTER
-from defs import CONV, SING, NARR
-from defs import ON_NONE, ON_NARR, ON_CONV, ON_SING, EX_SING, ON_TWOC
+from character import *
+from defs import *
+from defs import *
+
 
 # class SCRIPT
 #   data of script
@@ -27,17 +28,18 @@ class SCRIPT():
     # append_content
     #   add contents of script
     def append_content(self, cont):
-        if not isinstance(cont, CONV)\
-       and not isinstance(cont, TIMEPLACE):
-            raise TypeError("content can only have CONV, DESC, TIMEPLACE, not %s"%(type(cont)))
+        if not isinstance(cont, CONV) \
+                and not isinstance(cont, TIMEPLACE):
+            raise TypeError("content can only have CONV, DESC, TIMEPLACE, not %s" % (type(cont)))
         self.content.append(cont)
 
     # append_character
     #   add new character
     def append_character(self, character):
         if not isinstance(character, CHARACTER):
-            raise TypeError("character can only have CHARACTER, not %s"%(type(cont)))
+            raise TypeError("character can only have CHARACTER, not %s" % (type(cont)))
         self.character.append(character)
+
 
 # class CONV
 #   data of conversation
@@ -60,14 +62,17 @@ class SCRIPT():
 class CONV():
     def __init__(self, text, type, cont, speak):
         self.text = text
+        self.modified_text = text
         self.type = type
         self.cont = cont
         self.speak = speak
-        self.listen = None
-        self.ref = []
+        self.time_index=-1
+        self.listen = set()
+        self.ref = set()
 
     def __repr__(self):
         return "<conv {}>".format(self.type)
+
 
 # class TIMEPLACE
 #   data of scene heading
@@ -83,6 +88,14 @@ class TIMEPLACE():
 
     def __repr__(self):
         return "<timeplace>"
+
+def extract_name_only(input_name):
+    if(len(input_name)>6):
+        if(input_name[:6]=="YOUNG " or input_name[:6]=="GRAND "):
+            return input_name[6:]
+    elif(len(input_name)>5 and input_name[:5]=="TEEN "):
+        return input_name[5:]
+    return input_name
 
 # parse_playscript
 #   parse play script from file
@@ -132,12 +145,12 @@ def parse_playscript(fp):
                 am_flag = ON_NONE
         # seperate in lazy way
         elif line.startswith("                                              "):
-            continue # page number, script signs
+            continue  # page number, script signs
         elif line.startswith("                  "):  # conv or sing or sing title
             sline = line[:]
             line = line.strip()
-            if line.startswith("\""): # sing title
-                if am_flag != ON_NONE: # something parsed
+            if line.startswith("\""):  # sing title
+                if am_flag != ON_NONE:  # something parsed
                     script.append_content(conv)
                     if am_flag == ON_TWOC:
                         script.append_content(conv2)
@@ -145,8 +158,8 @@ def parse_playscript(fp):
                         before_type = conv.type
 
                 am_flag = EX_SING
-            elif am_flag == EX_SING: # sing - on singer
-                character_name = line.split("(", 1)[0].strip()
+            elif am_flag == EX_SING:  # sing - on singer
+                character_name = extract_name_only(line.split("(", 1)[0].strip())
                 # TODO : How to handle "YOUNG" or "TEEN"?
                 #      : More information about speaker such as (9)
                 character = script.get_character_by_name(character_name)
@@ -162,15 +175,15 @@ def parse_playscript(fp):
                 conv.text += ("" if len(conv.text) == 0 else " ") + line
             elif am_flag == ON_CONV and not sline.startswith("                            "):
                 conv.text += ("" if len(conv.text) == 0 else " ") + line
-            else: # conv - on speaker
-                if am_flag != ON_NONE: # something parsed
+            else:  # conv - on speaker
+                if am_flag != ON_NONE:  # something parsed
                     script.append_content(conv)
                     if am_flag == ON_TWOC:
                         script.append_content(conv2)
                     if am_flag != ON_NARR:
                         before_type = conv.type
 
-                character_name = line.split("(", 1)[0].strip()
+                character_name = extract_name_only(line.split("(", 1)[0].strip())
                 character = script.get_character_by_name(character_name)
                 if not character:
                     character = CHARACTER(character_name, "")
@@ -180,7 +193,6 @@ def parse_playscript(fp):
                             line.find("(CONT'D)") != -1,
                             character)
                 am_flag = ON_CONV
-
         elif line.startswith("   "):  # narrator or time & place
             if line.startswith("    "):
                 if am_flag != ON_NONE:
@@ -258,8 +270,9 @@ def parse_playscript(fp):
             continue
     return script
 
+
 if __name__ == "__main__":
-    f = open("../test/FROZEN.txt")
+    f = open("./data/FROZEN.txt")
     script = parse_playscript(f)
     for cont in script.content:
         if isinstance(cont, TIMEPLACE):
@@ -268,3 +281,5 @@ if __name__ == "__main__":
             print("NARR : {}".format(cont.text))
         else:
             print("{} : {}".format(cont.speak.name, cont.text))
+
+        
