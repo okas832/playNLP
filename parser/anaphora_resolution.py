@@ -291,3 +291,4 @@ if __name__ == "__main__":
 
     relationship_analyzer = Analyzer(script)
     relationship_analyzer.run()
+    #import pdb; pdb.set_trace() if you want to debug

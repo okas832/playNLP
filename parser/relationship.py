@@ -45,7 +45,7 @@ class Analyzer():
 
                 # lovingness
                 lovingness = 0
-                if sentiment > 0:
+                if sentiment > 0: # and (speaker.sex != listener.sex):
                     for conv in relationship['text']:
                         pos_text = nltk.pos_tag(word_tokenize(conv.lower()))
                         for love_keyword in [('love', '*'), ('like', 'V*'), ('darling', '*'), ('wife', '*'), ('husband', '*'), ('marry', '*')]:
@@ -74,6 +74,7 @@ class Analyzer():
 def run_relationship():
     relationship_analyzer = Analyzer()
     relationship_analyzer.run()
+
 
 
 if __name__ == '__main__':
