@@ -5,6 +5,7 @@ from nltk import word_tokenize
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 from forevaluation import *
 import string
+from relationship import Analyzer
 
 # pos_noun = {"NN", "NNS", "NNP", "NNPS"}
 pos_noun = {"NN", "NNP"}
@@ -188,14 +189,13 @@ def find_listeners_hard_with_using_weights():
                 #print("---------------------------")
                 index_of_listener_list+=1
 
-            
+
 
 if __name__ == "__main__":
     f = open("./data/FROZEN.txt")
     script = parse_playscript(f)
     previous_conv_type = -1
     previous_type_conv = { CONV : [], SING : [], NARR : []}
-    
     num_of_total_modified = 0
     num_of_correctly_modified = 0
     for cont in script.content:
@@ -265,7 +265,7 @@ if __name__ == "__main__":
         
 
     #evaluation
-    print("Modified text correctness:"+str(num_of_correctly_modified)+"/"+str(num_of_total_modified))
+    #print("Modified text correctness:"+str(num_of_correctly_modified)+"/"+str(num_of_total_modified))
     
     #Finding listeners by sdh
     len_of_script_contents=len(script.content)
@@ -278,10 +278,16 @@ if __name__ == "__main__":
             cont.time_index=timei
     
     find_listeners_hard_with_using_weights()
-
     #evaluation
-    print("Listeners match correctness:"+str(num_of_correct_listeners)+"/"+str(num_of_total_listeners))
+
+#    print("Listeners match correctness:"+str(num_of_correct_listeners)+"/"+str(num_of_total_listeners))
             
         # raw : We're underwater looking up at it. A saw cuts through, heading right for us.
         # tokenized_text : ['We', "'re", 'underwater', 'looking', 'up']
         # tagged_text : [('We', 'PRP'), ("'re", 'VBP'), ('underwater', 'JJ'), ('looking', 'VBG'), ('up', 'RP')]
+
+
+#------------------------------------Analyzer----------------------------------------------------
+
+    relationship_analyzer = Analyzer(script)
+    relationship_analyzer.run()
