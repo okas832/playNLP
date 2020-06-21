@@ -1,3 +1,5 @@
+import pickle
+
 from defs import *
 from script import *
 from nltk.tag import pos_tag
@@ -289,6 +291,9 @@ if __name__ == "__main__":
 
 #------------------------------------Analyzer----------------------------------------------------
 
-    relationship_analyzer = Analyzer(script)
-    relationship_analyzer.run()
+    with open('bin/frozen_anaphora_resolution.pickle', 'wb') as f:
+        pickle.dump(script, f)
+
+    # relationship_analyzer = Analyzer(script)
+    # relationship_analyzer.run()
     #import pdb; pdb.set_trace() if you want to debug
