@@ -2,6 +2,7 @@ import pickle
 
 from defs import *
 from script import *
+from Main_Character import *
 from nltk.tag import pos_tag
 from nltk import word_tokenize
 from nltk.tokenize.treebank import TreebankWordDetokenizer
@@ -280,9 +281,9 @@ if __name__ == "__main__":
             cont.time_index=timei
     
     find_listeners_hard_with_using_weights()
+    
     #evaluation
-
-#    print("Listeners match correctness:"+str(num_of_correct_listeners)+"/"+str(num_of_total_listeners))
+    #print("Listeners match correctness:"+str(num_of_correct_listeners)+"/"+str(num_of_total_listeners))
             
         # raw : We're underwater looking up at it. A saw cuts through, heading right for us.
         # tokenized_text : ['We', "'re", 'underwater', 'looking', 'up']
@@ -291,6 +292,11 @@ if __name__ == "__main__":
 
 #------------------------------------Analyzer----------------------------------------------------
 
+    relationship_analyzer = Analyzer(script)
+    relationship_analyzer.run()
+    character_ranking=finding_main_characters(relationship_analyzer.relationship, script)
+    print("Main Character: "+ str(character_ranking[0]))
+    print("All Character ranking: "+str(character_ranking[1]))
     with open('bin/frozen_anaphora_resolution.pickle', 'wb') as f:
         pickle.dump(script, f)
 
