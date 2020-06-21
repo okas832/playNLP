@@ -19,7 +19,7 @@ modified_texts_list=[
     ("The workers pile onto the giant horse-drawn ice sled as sled pulls away. Left behind, Kristoff and Sven push their ice block onto a dinky little sled then head off. We sweep up from them to the Northern Lights filling the sky...then move across the mountains...beneath the snowline...and descend upon...",1),
     ("ELSA (8) sleeps in ELSA's bed. ELSA's little sister ANNA (5) pops up beside ELSA.",1),
     ("Anna rolls onto ELSA's back and spreads all Anna's weight on Elsa.", 1),
-    ("(drama queen-ish) YOUNG ANNA just can't. The sky's awake, so YOUNG ANNA'm awake, so YOUNG ELSA and YOUNG ANNA have to play.",1),
+    ("(drama queen-ish) I just can't. The sky's awake, so I'm awake, so YOUNG ELSA and YOUNG ANNA have to play.",1),
     ("...Go play by YOUNG ANNA.",1),
     ("Elsa shoves Anna off the bed. Anna lands butt to floor, sighs, defeated. But then Anna gets an idea. Anna hops back on the bed and lifts one of Elsa's eyelids.",1),
     ("(mischievously) Do Elsa want to build a snowman?", 1),
@@ -29,5 +29,5 @@ modified_texts_list=[
     ("Elsa stomps Elsa's little slippered foot and a layer of ice suddenly coats the floor, forming a giant ice rink. Anna slides off, laughing. PLAY MONTAGE: -Anna and Elsa roll giant snowballs and build a snowman together. Elsa moves Olaf's stick arms around.", 1),
     ("(goofy voice) Hi, Anna is Olaf and Anna like warm hugs.", 1),
     ("Anna jumps up and hugs Olaf.", 1),
-    ("ANNA love you, Olaf.", 1),
+    ("I love you, Olaf.", 1),
 ]
