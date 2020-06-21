@@ -4,7 +4,7 @@ from collections import defaultdict
 from nltk.tokenize import word_tokenize
 import nltk
 import re
-
+import pickle
 
 """
 class Analyzer: calculate sentiment, lovingness, and servant relationship scores between characters.
@@ -70,12 +70,15 @@ class Analyzer():
                 relationship['result_topdown'] = servant
 
 
-
 def run_relationship():
     relationship_analyzer = Analyzer()
     relationship_analyzer.run()
 
 
-
 if __name__ == '__main__':
-    run_relationship()
+    # run_relationship()
+    with open('./bin/script_characteristic.pickle', 'rb') as f:
+        script = pickle.load(f)
+
+    analyzer = Analyzer(script)
+    analyzer.run()

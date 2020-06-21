@@ -1,3 +1,5 @@
+import pickle
+
 from defs import *
 from script import *
 from Main_Character import *
@@ -295,4 +297,9 @@ if __name__ == "__main__":
     character_ranking=finding_main_characters(relationship_analyzer.relationship, script)
     print("Main Character: "+ str(character_ranking[0]))
     print("All Character ranking: "+str(character_ranking[1]))
-    #import pdb; pdb.set_trace() #if you want to debug
+    with open('bin/frozen_anaphora_resolution.pickle', 'wb') as f:
+        pickle.dump(script, f)
+
+    # relationship_analyzer = Analyzer(script)
+    # relationship_analyzer.run()
+    #import pdb; pdb.set_trace() if you want to debug
