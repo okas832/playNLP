@@ -99,7 +99,7 @@ def run_relationship():
     relationship_analyzer.run()
 
 
-def build_graph(analyzer):
+def build_graph(analyzer, savefile='relationship.png'):
     graph = nx.MultiDiGraph()
     for analysis in analyzer.analysis:
         if not analysis['sentiment'] and not analysis['lovingness'] and not analysis['servant']:
@@ -109,23 +109,18 @@ def build_graph(analyzer):
         graph.add_node(analysis['listener'], node_size=1000)
 
         if analysis['servant'] > 0:
-            graph.add_edge(analysis['listener'], analysis['speaker'], color='m', weight=analysis['servant'] * 10)
+            graph.add_edge(analysis['listener'], analysis['speaker'], color='green', penwidth=analysis['servant'])
 
         if analysis['lovingness'] > 0:
-            graph.add_edge(analysis['speaker'], analysis['listener'], color='g', weight=analysis['lovingness'])
+            graph.add_edge(analysis['speaker'], analysis['listener'], color='pink', penwidth=analysis['lovingness'] / 2)
         else:
             if analysis['sentiment'] > 0:
-                graph.add_edge(analysis['speaker'], analysis['listener'], color='b', weight=analysis['sentiment'] * 10)
+                graph.add_edge(analysis['speaker'], analysis['listener'], color='blue', penwidth=analysis['sentiment'] * 20)
             else:
-                graph.add_edge(analysis['speaker'], analysis['listener'], color='r', weight=-analysis['sentiment'] * 10)
+                graph.add_edge(analysis['speaker'], analysis['listener'], color='red', penwidth=-analysis['sentiment'] * 20)
 
-    edges = graph.edges()
-    pos = nx.circular_layout(graph)
-    colors = nx.get_edge_attributes(graph, 'color').values()
-    weights = nx.get_edge_attributes(graph, 'weight').values()
-    nx.draw(graph, pos, with_labels=True, edges=edges, edge_color=colors, width=list(weights), font_size=8,
-            node_shape='o', node_size=1000, node_color='r', alpha=0.7)
-    plt.show()
+    agraph = nx.nx_agraph.to_agraph(graph)
+    agraph.draw(savefile, prog='circo')
 
 
 if __name__ == '__main__':
@@ -134,6 +129,13 @@ if __name__ == '__main__':
         script = pickle.load(f)
 
     analyzer = Analyzer(script)
-    analyzer.run(2)
+    analyzer.fill_relationship()
 
-    build_graph(analyzer)
+    analyzer.calculate_relationship(0)
+    build_graph(analyzer, 'graph_act1.png')
+
+    analyzer.calculate_relationship(1)
+    build_graph(analyzer, 'graph_act2.png')
+
+    analyzer.calculate_relationship(2)
+    build_graph(analyzer, 'graph_act3.png')
