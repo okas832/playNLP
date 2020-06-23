@@ -1,7 +1,5 @@
 from character import *
 from defs import *
-from defs import *
-
 
 # class SCRIPT
 #   data of script
@@ -160,8 +158,6 @@ def parse_playscript(fp):
                 am_flag = EX_SING
             elif am_flag == EX_SING:  # sing - on singer
                 character_name = extract_name_only(line.split("(", 1)[0].strip())
-                # TODO : How to handle "YOUNG" or "TEEN"?
-                #      : More information about speaker such as (9)
                 character = script.get_character_by_name(character_name)
                 if not character:
                     character = CHARACTER(character_name, "")
@@ -225,9 +221,9 @@ def parse_playscript(fp):
                 am_flag = ON_TWOC
                 continue
             line = line.strip()
-            # TODO : Non standard scene heading.
-            #        Starts with -INT. or -EXT. but has some narrator text in
-            #        one line
+            # FIXME : Non standard scene heading.
+            #         Starts with -INT. or -EXT. but has some narrator text in
+            #         one line
             if line.startswith("EXT. ") or line.startswith("INT. "):  # time
                 if am_flag != ON_NONE:  # something parsed
                     script.append_content(conv)
@@ -282,4 +278,4 @@ if __name__ == "__main__":
         else:
             print("{} : {}".format(cont.speak.name, cont.text))
 
-        
+
