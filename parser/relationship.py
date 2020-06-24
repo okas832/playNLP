@@ -195,7 +195,11 @@ def build_graph(analyzer, savefile='relationship.png'):
 
 if __name__ == '__main__':
     # run_relationship()
-    with open('./bin/script_characteristic.pickle', 'rb') as f:
+    # Frozen
+    # with open('./bin/script_characteristic.pickle', 'rb') as f:
+    #     script = pickle.load(f)
+    # Beauty and the Beast
+    with open('./bin/script_characteristic_BAB.pickle', 'rb') as f:
         script = pickle.load(f)
 
     analyzer = Analyzer(script)
@@ -203,12 +207,12 @@ if __name__ == '__main__':
 
     analyzer.calculate_relationship(0)
     analyzer.analyze_personality()
-    build_graph(analyzer, 'graph_act1.png')
+    build_graph(analyzer, 'graph_act1_BAB.png')
 
     analyzer.calculate_relationship(1)
     analyzer.analyze_personality()
-    build_graph(analyzer, 'graph_act2.png')
+    build_graph(analyzer, 'graph_act2_BAB.png')
 
     analyzer.calculate_relationship(2)
     analyzer.analyze_personality()
-    build_graph(analyzer, 'graph_act3.png')
+    build_graph(analyzer, 'graph_act3_BAB.png')

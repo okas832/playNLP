@@ -1,7 +1,8 @@
 import pickle
 
 from defs import *
-from script import *
+import script
+import script_BAB
 from Main_Character import *
 from nltk.tag import pos_tag
 from nltk import word_tokenize
@@ -195,8 +196,12 @@ def find_listeners_hard_with_using_weights():
 
 
 if __name__ == "__main__":
-    f = open("./data/FROZEN.txt")
-    script = parse_playscript(f)
+    # Beauty and the Beast
+    f = open("./data/BeautyAndTheBeast.txt")
+    script = script_BAB.parse_playscript(f)
+    # Frozen
+    # f = open("./data/FROZEN.txt")
+    # script = script.parse_playscript(f)
     previous_conv_type = -1
     previous_type_conv = { CONV : [], SING : [], NARR : []}
     num_of_total_modified = 0
@@ -231,8 +236,11 @@ if __name__ == "__main__":
                 changed = True
             if tag in pos_pronoun:
                 # print(f"word {word} tag {tag}")
-                modified_text = find_Antecedent(tokenized_text, tagged_text, previous_type_conv[cont.type])
-                changed = True    
+                try:
+                    modified_text = find_Antecedent(tokenized_text, tagged_text, previous_type_conv[cont.type])
+                except KeyError:
+                    pass
+                changed = True
                 break
         cont.modified_text = TreebankWordDetokenizer().detokenize(modified_text).strip()
         cont.modified_text= detokenize(modified_text)
@@ -297,8 +305,13 @@ if __name__ == "__main__":
     character_ranking=finding_main_characters(relationship_analyzer.relationship, script)
     print("Main Character: "+ str(character_ranking[0]))
     print("All Character ranking: "+str(character_ranking[1]))
-    with open('bin/frozen_anaphora_resolution.pickle', 'wb') as f:
+
+    # Beauty and the Beast
+    with open('bin/BAB_anaphora_resolution.pickle', 'wb') as f:
         pickle.dump(script, f)
+    # Frozen
+    # with open('bin/frozen_anaphora_resolution.pickle', 'wb') as f:
+    #     pickle.dump(script, f)
 
     # relationship_analyzer = Analyzer(script)
     # relationship_analyzer.run()

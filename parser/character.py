@@ -1,5 +1,6 @@
 from defs import *
-from script import *
+#from script import *
+from script_BAB import *
 
 from tqdm import tqdm
 import pickle
@@ -138,6 +139,7 @@ class CHARACTER(PERSONALITY):
         self.name = name
         self.sex = sex
         self.age_group = None
+        self.gender = None
 
 
 def extract_personality(script, pretrained=None):
@@ -159,8 +161,11 @@ def extract_personality(script, pretrained=None):
             age_group.append(trainer.predict(text, mode='age_group'))
             for i, mode in enumerate(['extroverted', 'stable', 'agreeable', 'conscientious', 'openness']):
                 personality[i] += trainer.predict(text, mode=mode) / len_text
-        character.gender = max(set(gender), key=gender.count)
-        character.age_group = max(set(age_group), key=age_group.count)
+        try:
+            character.gender = max(set(gender), key=gender.count)
+            character.age_group = max(set(age_group), key=age_group.count)
+        except ValueError:
+            pass
         character.set_PERSONALITY(*personality)
 
 
@@ -169,11 +174,21 @@ if __name__ == "__main__":
     # trainer.predict('I am so hungry !', mode='gender')
     # with open("./data/FROZEN.txt", "r") as f:
     #     script = parse_playscript(f)
-    with open('./bin/frozen_anaphora_resolution.pickle', 'rb') as f:
+    # Beauty and the Beast
+    with open('./bin/BAB_anaphora_resolution.pickle', 'rb') as f:
         script = pickle.load(f)
+    # Frozen
+    # with open('./bin/frozen_anaphora_resolution.pickle', 'rb') as f:
+    #     script = pickle.load(f)
     extract_personality(script, './bin/characteristic_trainer.pickle')
     for chr in script.character:
         print(f'{chr.name}: {chr.gender}/{chr.age_group}/{chr.get_PERSONALITY()}')
-    with open('./bin/script_characteristic.pickle', 'wb') as f:
+
+    # Beauty and the Beast
+    with open('./bin/script_characteristic_BAB.pickle', 'wb') as f:
         pickle.dump(script, f)
+
+    # Frozen
+    # with open('./bin/script_characteristic.pickle', 'wb') as f:
+    #     pickle.dump(script, f)
 
