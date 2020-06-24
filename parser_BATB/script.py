@@ -74,6 +74,24 @@ class CONV():
     def __repr__(self):
         return "<conv {}>".format(self.type)
 
+# Not need timeplace... but keep the format
+
+# class TIMEPLACE
+#   data of scene heading
+#
+# place - str
+#   place where scene begin
+# time - str
+#   time of scene, but not exact time(DAY, DAWN, NIGHT, ...)
+class TIMEPLACE():
+    def __init__(self, time, place):
+        self.time = time
+        self.place = place
+
+    def __repr__(self):
+        return "<timeplace>"
+
+
 def parse_playscript(fp):
     script = SCRIPT()
 
@@ -126,11 +144,14 @@ def parse_playscript(fp):
         conv.text = re.sub(r" ?\([^)]+\)", "", conv.text)
     return script
 if __name__ == "__main__":
-    f = open("../test/BeautyAndTheBeast.txt")
+    f = open("./data/BeautyAndTheBeast.txt")
     script = parse_playscript(f)
+    """
     for cont in script.content:
         if cont.type == NARR:
             print("NARR : {}".format(cont.text))
         else:
             print("{} : {}".format(cont.speak.name, cont.text))
-
+    """
+    for char in script.character:
+        print(char.name)
