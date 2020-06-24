@@ -130,6 +130,7 @@ def parse_playscript(fp):
                 conv.text += ("" if len(conv.text) == 0 else " ") + line.strip()
                 continue
             line = line.strip()
+            character_name = character_name.split(" ")[0] if character_name[-1].isnumeric() else character_name
             if character_name != "NARRATOR":
                 character = script.get_character_by_name(character_name)
                 if not character:
