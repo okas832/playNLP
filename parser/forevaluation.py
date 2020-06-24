@@ -28,5 +28,6 @@ modified_texts_dict = {
     104 : "No. We'll protect Elsa's. Elsa can learn to control it. I'm sure.",
     125 : "King pats Elsa's gloved hand.",
     146 : "The King goes to hug Elsa's.",
-
+    167 : "Kristoff leans in and speaks for Sven, as if Sven can.",
+    171 : "Kristoff pulls a carrot out of Kristoff's shirt pocket and hands it to Sven. Sven tries to bite the whole thing.",
 }

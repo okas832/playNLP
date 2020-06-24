@@ -496,7 +496,7 @@ if __name__ == "__main__":
 #         cont.modified_text = TreebankWordDetokenizer().detokenize(modified_text).strip()
 #         cont.modified_text= detokenize(modified_text)
         if changed:
-            # print(f"{ci} : {cont.text}")
+            print(f"{ci} : {cont.text}")
             if ci in modified_texts_dict:
             # if(num_of_total_modified<len(modified_texts_list)):
                 #print(cont.modified_text)
