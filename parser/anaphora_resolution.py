@@ -10,10 +10,25 @@ import string
 pos_noun = {"NN", "NNP"}
 pos_pronoun = {"PRP", "PRP$"}
 pos_verb = {"VB", "VBD", "VBG", "VBP", "VBZ"} # exclude "VBN" - which is past pariciple(ex. taken)
-Verb_set = {"discuss", "present", "illustrate", "identify", "summarise", "examine",
+pure_indicating_verbs = {"discuss", "present", "illustrate", "identify", "summarise", "examine",
 "describe", "define", "show", "check", "develop", "review", "report", "outline", "consider", "investigate", "explore", "assess",
-"analyse", "synthesise", "study", "survey", "deal", "cover"},
-cons = {"and", "or", "before", "after", "until", "when", "since", "while", "once", "as soon as", "as"}
+"analyse", "synthesise", "study", "survey", "deal", "cover"}
+indefinite_DT = {"a", "an", "many", "any", "either", "some"}
+
+indicating_verbs  = set()
+for verb in pure_indicating_verbs:
+    indicating_verbs.add(verb)
+    if verb.endswith("s"):
+        indicating_verbs.add(verb+"es")
+    else:
+        indicating_verbs.add(verb+"s")
+    
+    if verb.endswith("e"):
+        indicating_verbs.add(verb+"d")
+    else:
+        indicating_verbs.add(verb+"ed")
+# cons = {"and", "or", "before", "after", "until", "when", "since", "while", "once", "as soon as", "as"}
+# prepositions = {}
 PRONOUNS = {"You", 'you', "They", "they", "We", "we"}
 man_pronoun = {"he", "his", "him", "He", "His", "Him"}
 woman_pronoun = {"she", "her", "She", "Her"}
@@ -32,6 +47,10 @@ total_lexical = 0
 total_collocation = 0
 total_immediate = 0
 total_referential = 0
+total_preposition = 0
+total_indefinite = 0
+total_giveness = 0
+# total_matches = [0 for _ in range(8)]
 
 def detokenize(tokens):
     return "".join([" "+i if not i.startswith("'") and i not in string.punctuation else i for i in tokens]).strip()
@@ -54,9 +73,9 @@ def find_rightmost_verb(index, verb_word_and_tags):
         return word
     return None
 
-def find_noun_justbefore_con(index, noun_word_and_tags):
+def find_noun_justbefore(index, _word_and_tags):
     word = None
-    for i, word_and_tag in noun_word_and_tags.items():
+    for i, word_and_tag in _word_and_tags.items():
         if i < index: 
             word, _ = word_and_tag
         else:
@@ -69,13 +88,26 @@ def find_pronoun_justafter_con(index, pronoun_word_and_tags):
         return i
     return None
 
+def find_noun_justafter_indefiniteDT(index, available_nouns):
+    for aidx, available_noun in enumerate(available_nouns):
+        _, idx, _, _ = available_noun
+        if idx > index:
+            return aidx
+    return None
+
+
 def find_Antecedent(text, tagged_text, previous_convs):
+    print(f"find_Antecedent {len(previous_convs)}")
+    print(previous_convs)
     global total_first
     global total_indicating
     global total_lexical
     global total_collocation
     global total_immediate
     global total_referential
+    global total_preposition
+    global total_indefinite
+    global total_giveness
     # print("find_Antecedent")
     # print(tagged_text)
     modified_text = text
@@ -85,6 +117,9 @@ def find_Antecedent(text, tagged_text, previous_convs):
     noun_word_and_tags = {}
     verb_word_and_tags = {}
     cons_word_and_tags = {}
+    preposition_word_and_tags = {}
+    indefinite_word_and_tags = {}
+
     noun_with_counts = {}
     predefined_verb_indicies = []
     for i, word_and_tag in enumerate(tagged_text):
@@ -98,16 +133,45 @@ def find_Antecedent(text, tagged_text, previous_convs):
             noun_with_counts[word] += 1
         elif tag in pos_verb:
             verb_word_and_tags[i] = word_and_tag
-        elif word in cons:
+        # elif word in cons:
+        #     cons_word_and_tags[i] = word_and_tag
+        elif tag=="CC":
             cons_word_and_tags[i] = word_and_tag
+        elif tag=="IN":
+            preposition_word_and_tags[i] = word_and_tag
+        # elif tag=='DT' and word.lower() in indefinite_DT:
+        #     indefinite_word_and_tags[i] = word_and_tag
 
-        if word in Verb_set:
+
+        if word in indicating_verbs:
             predefined_verb_indicies.append(i)
     # print(f"previous_convs : {previous_convs}")
+    prev_sentence_available_nouns = []
+    prev_sentence_available_nouns_set = set()
+    is_imperative_sentence = False
+    if previous_convs:
+        for i, word_and_tag in enumerate(previous_convs[-1]):
+            word, tag = word_and_tag
+            if tag=='DT' and word.lower() in indefinite_DT:
+                indefinite_word_and_tags[i+100] = word_and_tag
+            if tag in pos_noun:
+                if word not in prev_sentence_available_nouns_set:
+                    prev_sentence_available_nouns_set.add(word)
+                    prev_sentence_available_nouns.append( [0, i+100, word, tag] )
+            if i==0 and tag in pos_verb:
+                is_imperative_sentence = True
+    
+    if not is_imperative_sentence:
+        if prev_sentence_available_nouns:
+            prev_sentence_available_nouns[0][0] += 1
+            total_giveness += 1
+
+
 
     for j, previous_conv in enumerate(previous_convs):
         for i, word_and_tag in enumerate(previous_conv):
             word, tag = word_and_tag
+            if tag not in pos_noun: continue
             if noun_with_counts.get(word)==None:
                 noun_with_counts[word] = 0
             noun_with_counts[word] += 1
@@ -128,17 +192,30 @@ def find_Antecedent(text, tagged_text, previous_convs):
                 if w not in available_nouns_set:
                     available_nouns_set.add(w)
                     available_nouns.append( [0, idx, w, t] )
-        print("target word")
-        print(word)
-        print("available_nouns")
-        print(available_nouns)
+        # Add prev_sentence noun if the noun does not appear in current sentence
+        prev_available_nouns = []
+        for available_noun in available_nouns:
+            _, _, w, t = available_noun
+            for prev_sentence_available_noun in prev_sentence_available_nouns:
+                _, _, pw, _ = prev_sentence_available_noun
+                if w!=pw:
+                    available_nouns_set.add(pw)
+                    prev_available_nouns.append(prev_sentence_available_noun)
+                    break
+        available_nouns.extend(prev_available_nouns)
+        # print("target word")
+        # print(word)
+        # print("available_nouns")
+        # print(available_nouns)
         if len(available_nouns) == 0: continue
+        
+        available_nouns.sort(key=lambda x:x[1])
+        
         # First noun phase
         available_nouns[0][0] += 1
         total_first += 1
             
         # Indicating verbs
-        available_nouns.sort(key=lambda x:x[1])
         for predefined_verb_index in predefined_verb_indicies:
             for available_noun in available_nouns:
                 if available_noun[1] > predefined_verb_index:
@@ -157,7 +234,7 @@ def find_Antecedent(text, tagged_text, previous_convs):
                 total_lexical += 1
         # Collocation match
         for available_noun in available_nouns:
-            score, idx, word, tag = available_noun
+            _, idx, word, tag = available_noun
             if find_leftmost_verb(index, verb_word_and_tags) == find_leftmost_verb(idx, verb_word_and_tags) or \
                 find_rightmost_verb(index, verb_word_and_tags) == find_rightmost_verb(idx, verb_word_and_tags):
                 available_noun[0] += 2
@@ -166,8 +243,8 @@ def find_Antecedent(text, tagged_text, previous_convs):
         for cidx, word_and_tag in cons_word_and_tags.items():
             if index == find_pronoun_justafter_con(cidx, pronoun_word_and_tags):
                 for available_noun in available_nouns:
-                    score, idx, available_word, tag = available_noun
-                    if available_word == find_noun_justbefore_con(cidx, noun_word_and_tags):                    
+                    _, idx, available_word, tag = available_noun
+                    if available_word == find_noun_justbefore(cidx, noun_word_and_tags):                    
                         available_noun[0] += 2
                         total_immediate += 1
         # Referential distance
@@ -182,10 +259,23 @@ def find_Antecedent(text, tagged_text, previous_convs):
                 if (available_word, tag) in previous_conv:
                     available_noun[0] += 1-j
                     total_referential += 1
+        
         # Non-prepositional pharse
+        for pidx, word_and_tag in preposition_word_and_tags.items():
+            for available_noun in available_nouns:
+                score, idx, available_word, tag = available_noun
+                if available_word == find_noun_justbefore(pidx, noun_word_and_tags):                    
+                    available_noun[0] -= 1
+                    total_preposition += 1
+        
+        # Definiteness
+        for iidx, word_and_tag in indefinite_word_and_tags.items():
+            aidx = find_noun_justafter_indefiniteDT(iidx, available_nouns)
+            if aidx:
+                available_nouns[aidx][0] -= 1
+                total_indefinite += 1
 
-
-
+        # Giveness
 
         
         available_nouns.sort(reverse=True)
@@ -321,6 +411,8 @@ if __name__ == "__main__":
             # print("TIME : {}, PLACE : {}".format(cont.time, cont.place))
             previous_type_conv = { CONV : [], SING : [], NARR : []}
             previous_conv_type = -1
+            for character in all_characters:
+                previous_character_conv[character] = []
             continue
         # cont.type : NARR, CONV, SING
 
@@ -431,5 +523,9 @@ if __name__ == "__main__":
     print(f"total_collocation : {total_collocation}")
     print(f"total_immediate : {total_immediate}")
     print(f"total_referential : {total_referential}")
+    print(f"total_preposition : {total_preposition}")
+    print(f"total_indefinite : {total_indefinite}")
+    print(f"total_giveness : {total_giveness}")
+    
 
     
