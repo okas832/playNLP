@@ -196,12 +196,8 @@ def find_listeners_hard_with_using_weights():
 
 
 if __name__ == "__main__":
-    # Beauty and the Beast
-    f = open("./data/BeautyAndTheBeast.txt")
-    script = script_BAB.parse_playscript(f)
-    # Frozen
-    # f = open("./data/FROZEN.txt")
-    # script = script.parse_playscript(f)
+    f = open("./data/FROZEN.txt")
+    script = parse_playscript(f)
     previous_conv_type = -1
     previous_type_conv = { CONV : [], SING : [], NARR : []}
     num_of_total_modified = 0
