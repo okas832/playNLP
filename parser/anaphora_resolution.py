@@ -1,103 +1,61 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[86]:
-
-
 import nltk
-from nltk import word_tokenize, pos_tag, ne_chunk, Tree
+from nltk import word_tokenize, ne_chunk, Tree
 from nltk.tokenize.treebank import TreebankWordDetokenizer
+from defs import *
+from script import *
+from nltk.tag import pos_tag
+from forevaluation import *
+import string
+
+pos_noun = {"NN", "NNS", "NNP", "NNPS"}
+pos_single_noun = {"NN", "NNP"}
+pos_plural_noun = {"NNS", "NNPS"}
+# pos_noun = {"NN", "NNP"}
+pos_pronoun = {"PRP", "PRP$"}
+pos_verb = {"VB", "VBD", "VBG", "VBP", "VBZ"} # exclude "VBN" - which is past pariciple(ex. taken)
+pure_indicating_verbs = {"discuss", "present", "illustrate", "identify", "summarise", "examine",
+"describe", "define", "show", "check", "develop", "review", "report", "outline", "consider", "investigate", "explore", "assess",
+"analyse", "synthesise", "study", "survey", "deal", "cover"}
+indefinite_DT = {"a", "an", "many", "any", "either", "some"}
+
+indicating_verbs  = set()
+for verb in pure_indicating_verbs:
+    indicating_verbs.add(verb)
+    if verb.endswith("s"):
+        indicating_verbs.add(verb+"es")
+    else:
+        indicating_verbs.add(verb+"s")
+    
+    if verb.endswith("e"):
+        indicating_verbs.add(verb+"d")
+    else:
+        indicating_verbs.add(verb+"ed")
+# cons = {"and", "or", "before", "after", "until", "when", "since", "while", "once", "as soon as", "as"}
+# prepositions = {}
+PRONOUNS = {"you", "they", "we", "us", "their", "your"}
+SINGLE_PRONOUNS = {"you", "your"}
+# PLURAL_PRONOUNS = {"they", "we", "us", "their"}
+man_pronoun = {"he", "his", "him"}
+woman_pronoun = {"she", "her"}
+man = {"kristoff", "sven", "olaf", "hans", "king"}
+woman = {"elsa", "anna", "queen"}
 
 
-# In[87]:
+# global total_first
+# global total_indicating
+# global total_lexical
+# global total_collocation
 
-
-def pp(sent):
-    sent = word_tokenize(sent)
-    sent = pos_tag(sent)
-    return sent
-
-
-# In[88]:
-
-
-pp("KRISTOFF and SVEN are playing.")
-
-
-# In[89]:
-
-
-pp("KRISTOFF and SVEN are playing")
-
-
-# In[90]:
-
-
-pp("A sharp ice floe overtakes the workers, threateningly.")
-
-
-# In[91]:
-
-
-pp("Elsa shoves Anna off the bed. Anna lands butt to floor, sighs, defeated. But then she gets an idea. She hops back on the bed and lifts one of Elsa's eyelids.")
-
-
-# In[92]:
-
-
-# modified_text = [('KRISTOFF and SVEN', 'NNP'),
-#  ('are', 'VBP'),
-#  ('playing', 'VBG'),
-#  ('.', '.')]
-# modified_text = [('KRISTOFF', 'NNP'),
-#  ('and', 'CC'),
-#  ('SVEN', 'NNP'),
-#  ('are', 'VBP'),
-#  ('playing', 'VBG'),
-#  ('.', '.')]
-# result = TreebankWordDetokenizer().detokenize(modified_text).strip()
-# result = detokenize(modified_text)
-# result
-
-
-# In[93]:
-
-
-sents = ["Snowflakes suddenly burst forth and dance between her palms, forming a snowball."]
-tagged_sents_list = [
-    [[('I', 'PRP'), ('KNOW', 'VBP'), ('IT', 'NNP'), ('ALL', 'NNP'), ('ENDS', 'NNP'), ('TOMORROW', 'NNP'), (',', ','), ('SO', 'NNP'), ('IT', 'NNP'), ('HAS', 'NNP'), ('TO', 'NNP'), ('BE', 'NNP'), ('TODAY', 'NNP'), ('!', '.'), ('!', '.'), ('`', '``'), ('CAUSE', 'NN'), ('FOR', 'IN'), ('THE', 'NNP'), ('FIRST', 'NNP'), ('TIME', 'NNP'), ('IN', 'NNP'), ('FOREVER', 'NNP'), ('.', '.'), ('.', '.'), ('.', '.'), ('FOR', 'IN'), ('THE', 'NNP'), ('FIRST', 'NNP'), ('TIME', 'NNP'), ('IN', 'NNP'), ('FOREVER', 'NNP'), ('!', '.'), ('NOTHING', 'NN'), ("'S", 'VBZ'), ('IN', 'NNP'), ('MY', 'NNP'), ('WAY', 'NN'), ('!', '.'), ('!', '.'), ('!', '.')], [('(', '('), ('frustrated', 'VBN'), (')', ')'), ('Hey', 'NN'), ('!', '.')], [('(', '('), ('gentler', 'NN'), (')', ')'), ('Hey', 'NNP'), ('.', '.'), ('I-ya', 'NNP'), (',', ','), ('no', 'DT'), ('.', '.'), ('No', 'UH'), ('.', '.'), ('I', 'PRP'), ("'m", 'VBP'), ('okay', 'JJ'), ('.', '.')]],
-    [[('Here', 'RB'), ('?', '.'), ('Are', 'VBP'), ('you', 'PRP'), ('sure', 'JJ'), ('?', '.')], [('Hi', 'NNP'), ('me', 'PRP'), ('...', ':'), ('?', '.'), ('Oh', 'UH'), ('.', '.'), ('Um', 'NNP'), ('.', '.'), ('Hi', 'NNP'), ('.', '.')], [('Thank', 'NNP'), ('you', 'PRP'), ('.', '.'), ('You', 'PRP'), ('look', 'VBP'), ('beautifuller', 'JJ'), ('.', '.'), ('I', 'PRP'), ('mean', 'VBP'), (',', ','), ('not', 'RB'), ('fuller', 'VB'), ('.', '.'), ('You', 'PRP'), ('do', 'VBP'), ("n't", 'RB'), ('look', 'VB'), ('fuller', 'NN'), (',', ','), ('but', 'CC'), ('more', 'JJR'), ('beautiful', 'NNS'), ('.', '.')]],
-    [[('That', 'DT'), ("'s", 'VBZ'), ('horrible', 'JJ'), ('.', '.')], [('...', ':'), ('And', 'CC'), ('sisters', 'NNS'), ('.', '.'), ('Elsa', 'NNP'), ('and', 'CC'), ('I', 'PRP'), ('were', 'VBD'), ('really', 'RB'), ('close', 'JJ'), ('when', 'WRB'), ('we', 'PRP'), ('were', 'VBD'), ('little', 'JJ'), ('.', '.'), ('But', 'CC'), ('then', 'RB'), (',', ','), ('one', 'CD'), ('day', 'NN'), ('she', 'PRP'), ('just', 'RB'), ('shut', 'VB'), ('me', 'PRP'), ('out', 'RP'), (',', ','), ('and', 'CC'), ('I', 'PRP'), ('never', 'RB'), ('knew', 'VBD'), ('why', 'WRB'), ('.', '.')], [('Okay', 'NNP'), (',', ','), ('can', 'MD'), ('I', 'PRP'), ('just', 'RB'), ('say', 'VBP'), ('something', 'NN'), ('crazy', 'NN'), ('?', '.')]],
-]
-
-
-# In[94]:
-
-
-for sent in sents:
-    sent = pp(sent)
-    t = ne_chunk(sent)
-    sub = [subtree.leaves() for subtree in t if type(subtree) == Tree and subtree.label() == "NP"]
-    if sub:
-        print(t)
-        print(sub)
-
-
-# In[95]:
-
-
-for tagged_sents in tagged_sents_list:
-    for sent in tagged_sents:
-        t = ne_chunk(sent)
-        sub = [subtree.leaves() for subtree in t if type(subtree) == Tree and subtree.label() == "NP"]
-
-        print(t)
-        print(sub)
-        print()
-
-
-# In[96]:
-
+total_first = 0
+total_indicating = 0
+total_lexical = 0
+total_collocation = 0
+total_immediate = 0
+total_referential = 0
+total_preposition = 0
+total_indefinite = 0
+total_giveness = 0
+# total_matches = [0 for _ in range(8)]
 
 def find_listeners_easy():
     moving_index=0
@@ -193,63 +151,7 @@ def find_listeners_hard_with_using_weights():
 # In[97]:
 
 
-from defs import *
-from script import *
-from nltk.tag import pos_tag
-from nltk import word_tokenize
-from nltk.tokenize.treebank import TreebankWordDetokenizer
-from forevaluation import *
-import string
 
-pos_noun = {"NN", "NNS", "NNP", "NNPS"}
-pos_single_noun = {"NN", "NNP"}
-pos_plural_noun = {"NNS", "NNPS"}
-# pos_noun = {"NN", "NNP"}
-pos_pronoun = {"PRP", "PRP$"}
-pos_verb = {"VB", "VBD", "VBG", "VBP", "VBZ"} # exclude "VBN" - which is past pariciple(ex. taken)
-pure_indicating_verbs = {"discuss", "present", "illustrate", "identify", "summarise", "examine",
-"describe", "define", "show", "check", "develop", "review", "report", "outline", "consider", "investigate", "explore", "assess",
-"analyse", "synthesise", "study", "survey", "deal", "cover"}
-indefinite_DT = {"a", "an", "many", "any", "either", "some"}
-
-indicating_verbs  = set()
-for verb in pure_indicating_verbs:
-    indicating_verbs.add(verb)
-    if verb.endswith("s"):
-        indicating_verbs.add(verb+"es")
-    else:
-        indicating_verbs.add(verb+"s")
-    
-    if verb.endswith("e"):
-        indicating_verbs.add(verb+"d")
-    else:
-        indicating_verbs.add(verb+"ed")
-# cons = {"and", "or", "before", "after", "until", "when", "since", "while", "once", "as soon as", "as"}
-# prepositions = {}
-PRONOUNS = {"you", "they", "we", "us", "their", "your"}
-SINGLE_PRONOUNS = {"you", "your"}
-# PLURAL_PRONOUNS = {"they", "we", "us", "their"}
-man_pronoun = {"he", "his", "him"}
-woman_pronoun = {"she", "her"}
-man = {"kristoff", "sven", "olaf", "hans", "king"}
-woman = {"elsa", "anna", "queen"}
-
-
-# global total_first
-# global total_indicating
-# global total_lexical
-# global total_collocation
-
-total_first = 0
-total_indicating = 0
-total_lexical = 0
-total_collocation = 0
-total_immediate = 0
-total_referential = 0
-total_preposition = 0
-total_indefinite = 0
-total_giveness = 0
-# total_matches = [0 for _ in range(8)]
 
 
 # In[98]:
@@ -303,7 +205,7 @@ def find_noun_justafter_indefiniteDT(index, available_nouns):
 
 
 def find_Antecedent(text, tagged_text, previous_convs):
-    print(f"find_Antecedent : {text}")
+    # print(f"find_Antecedent : {text}")
 #     print("previous_convs")
 #     print(previous_convs)
     global total_first
@@ -416,28 +318,10 @@ def find_Antecedent(text, tagged_text, previous_convs):
                 if w not in available_nouns_set:
                     available_nouns_set.add(w)
                     available_nouns.append( [s, idx, w, t] )
-#         if available_nouns:
-#             prev_available_nouns = []
-#             for available_noun in available_nouns:
-#                 _, _, w, t = available_noun
-#                 for prev_sentence_available_noun in prev_sentence_available_nouns:
-#                     _, _, pw, _ = prev_sentence_available_noun
-#                     if w!=pw:
-#                         available_nouns_set.add(pw)
-#                         prev_available_nouns.append(prev_sentence_available_noun)
-#                         break
-#             available_nouns.extend(prev_available_nouns)
-#         else:
-#             available_nouns = prev_sentence_available_nouns
-        
-#         print("prev_available_nouns")
-#         print(prev_available_nouns)
-        print("available_nouns")
-        print(available_nouns)
-        # print("target word")
-        # print(word)
+
         # print("available_nouns")
         # print(available_nouns)
+
         if len(available_nouns) == 0: continue
         
         available_nouns.sort(key=lambda x:x[1])
@@ -510,14 +394,7 @@ def find_Antecedent(text, tagged_text, previous_convs):
 
         
         available_nouns.sort(reverse=True)
-        print("target word")
-        print(pronoun_word_and_tags[index])
-        print("available_nouns")
-        print(available_nouns)
-        # print(f"target anaphora : {text[index]}")
-        # print("available_nouns")
-        # print(available_nouns)
-        # print(f"tagged_text[index][1] : {tagged_text[index][1]}")
+
         if tagged_text[index][1] == "PRP" and tagged_text[index][0] in PRONOUNS and len(available_nouns) >= 2:
             del modified_text[index]
             modified_text = modified_text[:index] + [available_nouns[0][2], "and", available_nouns[1][2]] +modified_text[index:]
@@ -553,7 +430,7 @@ if __name__ == "__main__":
     for character in all_characters:
         previous_character_conv[character] = []
 
-    for cont in script.content:
+    for ci, cont in enumerate(script.content):
         
         changed = False
        
@@ -619,7 +496,9 @@ if __name__ == "__main__":
 #         cont.modified_text = TreebankWordDetokenizer().detokenize(modified_text).strip()
 #         cont.modified_text= detokenize(modified_text)
         if changed:
-            if(num_of_total_modified<len(modified_texts_list)):
+            # print(f"{ci} : {cont.text}")
+            if ci in modified_texts_dict:
+            # if(num_of_total_modified<len(modified_texts_list)):
                 #print(cont.modified_text)
                 #print(modified_texts_list[num_of_total_modified][0])
                 #print()
@@ -629,11 +508,12 @@ if __name__ == "__main__":
                 print("modified_text")
                 print(f"{cont.modified_text} {len(cont.modified_text)}")
                 print("answer")
-                print(f"{modified_texts_list[num_of_total_modified][0]} {len(modified_texts_list[num_of_total_modified][0])}")
-                if(cont.modified_text==modified_texts_list[num_of_total_modified][0]):
-                    print("--------------- Correct ! -----------------------")
+                print(f"{modified_texts_dict[ci]} {len(modified_texts_dict[ci])}")
+                if(cont.modified_text==modified_texts_dict[ci]):
                     num_of_correctly_modified+=1
                 num_of_total_modified+=1
+                print(f"--------------- {num_of_correctly_modified} / {num_of_total_modified} Correct ! -----------------------")
+
 
     #evaluation
     print("Modified text correctness:"+str(num_of_correctly_modified)+"/"+str(num_of_total_modified))
