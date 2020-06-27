@@ -194,12 +194,7 @@ def build_graph(analyzer, savefile='relationship.png'):
 
 
 if __name__ == '__main__':
-    # run_relationship()
-    # Frozen
-    # with open('./bin/script_characteristic.pickle', 'rb') as f:
-    #     script = pickle.load(f)
-    # Beauty and the Beast
-    with open('./bin/script_characteristic_BAB.pickle', 'rb') as f:
+    with open('./bin/script_characteristic.pickle', 'rb') as f:
         script = pickle.load(f)
 
     analyzer = Analyzer(script)

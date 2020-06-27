@@ -167,10 +167,6 @@ def extract_personality(script, pretrained=None):
 
 
 if __name__ == "__main__":
-    # trainer = CHARACTERISTIC_TRAINER()
-    # trainer.predict('I am so hungry !', mode='gender')
-    # with open("./data/FROZEN.txt", "r") as f:
-    #     script = parse_playscript(f)
     with open('./bin/BATB_anaphora_resolution.pickle', 'rb') as f:
         script = pickle.load(f)
     extract_personality(script, './bin/characteristic_trainer.pickle')

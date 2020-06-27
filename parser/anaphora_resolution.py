@@ -2,7 +2,6 @@ import pickle
 
 from defs import *
 import script
-import script_BAB
 from Main_Character import *
 from nltk.tag import pos_tag
 from nltk import word_tokenize
@@ -302,13 +301,6 @@ if __name__ == "__main__":
     print("Main Character: "+ str(character_ranking[0]))
     print("All Character ranking: "+str(character_ranking[1]))
 
-    # Beauty and the Beast
-    with open('bin/BAB_anaphora_resolution.pickle', 'wb') as f:
+    with open('bin/frozen_anaphora_resolution.pickle', 'wb') as f:
         pickle.dump(script, f)
-    # Frozen
-    # with open('bin/frozen_anaphora_resolution.pickle', 'wb') as f:
-    #     pickle.dump(script, f)
 
-    # relationship_analyzer = Analyzer(script)
-    # relationship_analyzer.run()
-    #import pdb; pdb.set_trace() if you want to debug

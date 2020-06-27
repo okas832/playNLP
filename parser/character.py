@@ -1,6 +1,5 @@
 from defs import *
-#from script import *
-from script_BAB import *
+from script import *
 
 from tqdm import tqdm
 import pickle
@@ -174,21 +173,13 @@ if __name__ == "__main__":
     # trainer.predict('I am so hungry !', mode='gender')
     # with open("./data/FROZEN.txt", "r") as f:
     #     script = parse_playscript(f)
-    # Beauty and the Beast
-    with open('./bin/BAB_anaphora_resolution.pickle', 'rb') as f:
+
+    with open('./bin/frozen_anaphora_resolution.pickle', 'rb') as f:
         script = pickle.load(f)
-    # Frozen
-    # with open('./bin/frozen_anaphora_resolution.pickle', 'rb') as f:
-    #     script = pickle.load(f)
     extract_personality(script, './bin/characteristic_trainer.pickle')
     for chr in script.character:
         print(f'{chr.name}: {chr.gender}/{chr.age_group}/{chr.get_PERSONALITY()}')
 
-    # Beauty and the Beast
-    with open('./bin/script_characteristic_BAB.pickle', 'wb') as f:
+    with open('./bin/script_characteristic.pickle', 'wb') as f:
         pickle.dump(script, f)
-
-    # Frozen
-    # with open('./bin/script_characteristic.pickle', 'wb') as f:
-    #     pickle.dump(script, f)
 

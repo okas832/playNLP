@@ -297,6 +297,8 @@ if __name__ == "__main__":
     character_ranking=finding_main_characters(relationship_analyzer.relationship, script)
     print("Main Character: "+ str(character_ranking[0]))
     print("All Character ranking: "+str(character_ranking[1]))
+    print("Total properties: " + str(character_ranking[2]))
+
     with open('bin/BATB_anaphora_resolution.pickle', 'wb') as f:
         pickle.dump(script, f)
 
