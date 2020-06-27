@@ -1,6 +1,6 @@
 from script import *
 
-main_property=100
+main_property=7.5
 weight_of_num_of_convs=1
 weight_of_num_of_relations=5
 
@@ -8,6 +8,7 @@ def finding_main_characters(input_relations, script):
     output_hubos={}
     output=[]
     output_all=[]
+    total_properties=0
     for character in script.character:
         output_hubos[character.name]=[0, 0]
     for conv in script.content:
@@ -20,11 +21,13 @@ def finding_main_characters(input_relations, script):
         output_hubos[charac][0]+=len(input_relations[charac])
     for charac in output_hubos.keys():
         calculated_property=output_hubos[charac][0]*weight_of_num_of_relations+output_hubos[charac][1]*weight_of_num_of_convs
-        if(main_property<calculated_property):
-            output.append((charac, calculated_property))
+        total_properties+=calculated_property
         output_all.append((charac, calculated_property))
+    for charac in output_all:
+        if(charac[1]/total_properties*100>main_property):
+            output.append(charac)
     output.sort(key=lambda x:x[1])
     output_all.sort(key=lambda x:x[1])
     output.reverse()
     output_all.reverse()
-    return [output, output_all]
+    return [output, output_all, total_properties]
